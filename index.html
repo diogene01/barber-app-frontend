@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Barber App - Sistema de Barbearia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="./src/index.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .stat-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .nav-link.active {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            font-weight: 600;
+        }
+    
+        #admin-sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        button .fas, button .fab {
+            pointer-events: none;
+        }
+
+        .time-slot {
+            cursor: pointer;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .time-slot:hover { background-color: #e5e7eb; }
+        .time-slot.selected {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .time-slot.disabled {
+            cursor: not-allowed;
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+        #customer-view {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .password-container { position: relative; }
+
+        #loadingScreen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .barber-pole {
+            width: 50px;
+            height: 180px;
+            border: 4px solid #ddd;
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 0 25px rgba(255, 157, 0, 0.3);
+        }
+
+        /* O Segredo do Loop está aqui: */
+        .barber-pole::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            /* A altura deve ser grande o suficiente para cobrir o movimento */
+            height: 200%; 
+            background: repeating-linear-gradient(
+                -45deg,
+                #ff0000,
+                #ff0000 20px,
+                #ffffff 20px,
+                #ffffff 40px,
+                #0000ff 40px,
+                #0000ff 60px,
+                #ffffff 60px,
+                #ffffff 80px
+            );
+            /* Animamos exatamente o tamanho de um ciclo do gradiente (80px) */
+            animation: moveStripes 5s linear infinite;
+        }
+
+        /* Tampas de Metal */
+        .pole-cap {
+            width: 60px;
+            height: 20px;
+            background: linear-gradient(to bottom, #eee, #999, #eee);
+            border-radius: 8px;
+            position: absolute;
+            left: -5px;
+            z-index: 2;
+        }
+        .cap-top { top: -15px; }
+        .cap-bottom { bottom: -15px; }
+
+        /* O pulo do gato: o movimento de 80px bate com o fim do gradiente */
+        @keyframes moveStripes {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-100px); } 
+        }
+
+        .loading-text {
+            margin-top: 30px;
+            color: #ff9d00;
+            /* font-family: 'Impact', 'Arial Black', sans-serif; */
+            font-size: 18px;
+            letter-spacing: 3px;
+            text-align: center;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+
+</head>
+<body class="text-gray-800">
+    <div id="loadingScreen">
+    <div style="position: relative;">
+        <div class="pole-cap cap-top"></div>
+        <div class="barber-pole"></div>
+        <div class="pole-cap cap-bottom"></div>
+    </div>
+    <div class="loading-text">CARREGANDO INFORMAÇÕES...</div>
+    </div>
+    <div id="login-screen" class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg mx-4">
+            <div class="text-center">
+                <i class="fas fa-cut text-5xl text-slate-700"></i>
+                <h2 class="mt-4 text-3xl font-bold text-gray-900">Barber App</h2>
+                <p class="mt-2 text-sm text-gray-600">Faça seu login para continuar</p>
+            </div>
+            
+            <div id="login-form-container">
+                <form id="admin-login-form">
+                    <h3 class="text-lg font-medium text-center text-gray-700 mb-4">Acesso do Barbeiro</h3>
+                    <div class="space-y-4">
+                        <input type="email" id="barber-email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="E-mail" required>
+                        <div class="password-container">
+                            <input type="password" id="barber-password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="Senha" required>
+                            <i class="fas fa-eye-slash absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-400" data-toggle-password="barber-password"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full px-4 py-2 mt-6 font-semibold text-white bg-[#334155] rounded-md hover:opacity-90">Entrar no Painel</button>
+                </form>
+                <div class="my-4 flex items-center justify-center"><span class="px-2 text-sm text-gray-500 bg-white">OU</span></div>
+                <form id="client-login-form">
+                    <h3 class="text-lg font-medium text-center text-gray-700 mb-4">Acesso do Cliente</h3>
+                    <div class="space-y-4">
+                        <input type="email" id="client-email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="E-mail" required>
+                        <div class="password-container">
+                            <input type="password" id="client-password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="Senha" required>
+                            <i class="fas fa-eye-slash absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-400" data-toggle-password="client-password"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full px-4 py-2 mt-6 font-semibold text-white bg-[#334155] rounded-md hover:opacity-90">Agendar Horário</button>
+                </form>
+                <p class="mt-6 text-center text-sm">
+                    <a href="#" id="show-register-link" class="font-medium text-slate-700 hover:underline">Não tem uma conta? Cadastre-se</a>
+                </p>
+            </div>
+
+            <div id="register-form-container" class="hidden">
+                <form id="register-form">
+                    <h3 class="text-xl font-bold text-center text-gray-800 mb-4">Crie sua Conta</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="register-name" class="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Nome" required>
+                        <input type="email" id="register-email" class="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="E-mail" required>
+                        <input type="tel" id="register-phone" class="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Telefone" required>
+                        <div class="password-container">
+                            <input type="password" id="register-password" class="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Senha" required>
+                            <i class="fas fa-eye-slash absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-400" data-toggle-password="register-password"></i>
+                        </div>
+                        <div class="password-container">
+                            <input type="password" id="register-confirm-password" class="w-full px-4 py-2 border border-gray-300 rounded-md" placeholder="Senha" required>
+                            <i class="fas fa-eye-slash absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-400" data-toggle-password="register-confirm-password"></i>
+                        </div>
+                        <select id="user-type" class="w-full px-4 py-2 border border-gray-300 rounded-md" required>
+                            <option value="">Tipo de conta</option>
+                            <option value="client">Cliente</option>
+                            <option value="barber">Barbeiro</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full px-4 py-2 mt-6 font-semibold text-white bg-slate-700 rounded-md">Criar Conta</button>
+                </form>
+                <p class="mt-6 text-center text-sm">
+                    <a href="#" id="show-login-link" class="font-medium text-slate-700 hover:underline">Já tem uma conta? Faça Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div id="barber-code-screen" class="flex items-center justify-center min-h-screen bg-gray-100 hidden">
+        <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg text-center mx-4">
+            <i class="fas fa-cut text-5xl text-slate-700"></i>
+            <h2 class="mt-4 text-2xl font-bold text-gray-900">Selecione sua Barbearia</h2>
+            <form id="barber-code-form" class="space-y-4 mt-6">
+                <input type="text" id="barber-code-input" class="w-full px-4 py-2 text-center border border-gray-300 rounded-md" placeholder="Código da Barbearia" required>
+                <button type="submit" class="w-full px-4 py-2 mt-6 font-semibold text-white bg-[#334155] rounded-md">Entrar</button>
+            </form>
+            <p id="barber-code-error" class="text-red-500 text-sm mt-4 hidden"></p>
+        </div>
+    </div>
+
+    <div id="app-wrapper" class="hidden">
+        <div id="admin-view" class="flex h-screen bg-gray-100 hidden relative overflow-hidden">
+            <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+            <div id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 transform -translate-x-full md:relative md:translate-x-0 flex flex-col">
+                <div class="flex flex-col items-center justify-center pt-6 pb-4 px-6 border-b bg-white relative">
+                    
+                    <button id="close-sidebar" class="md:hidden absolute top-4 right-4 text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                    <div class="w-28 h-28 mb-3 rounded-full shadow-md border-2 border-gray-100 overflow-hidden bg-gray-50 flex-shrink-0">
+                        <img id="header-logo" src="" class="app-logo w-full h-full object-cover">
+                    </div>
+                    <span id="admin-name-display" class="font-bold text-gray-800 text-lg text-center truncate w-full px-2">
+                        barbeiro
+                    </span>
+                </div>
+                <nav id="sidebar-nav" class="flex-grow p-4 space-y-2 overflow-y-auto">
+                    <a href="#" data-target="page-dashboard" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-chart-pie w-6"></i> Dashboard</a>
+                    <a href="#" data-target="page-appointments" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-calendar-alt w-6"></i> Agenda</a>
+                    <a href="#" data-target="page-services" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-cut w-6"></i> Serviços</a>
+                    <a href="#" data-target="page-plans" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-gem w-6"></i> Planos</a>
+                    <a href="#" data-target="page-clients" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-users w-6"></i> Clientes</a>
+                    <a href="#" data-target="page-expenses" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-wallet w-6"></i> Despesas</a>
+                    <a href="#" data-target="page-subscription" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-star w-6"></i> Assinatura</a>
+                    <a href="#" data-target="page-settings" class="nav-link flex items-center px-4 py-2 rounded-md"><i class="fas fa-cog w-6"></i> Configurações</a>
+                </nav>
+            </div>
+
+            <!-- ÁREA DE CONTEÚDO -->
+            <div class="flex flex-col flex-grow w-full overflow-hidden">
+                <header class="flex items-center h-16 px-4 bg-white shadow-sm justify-between flex-shrink-0">
+                    <div class="flex items-center">
+                        <!-- BOTÃO HAMBÚRGUER -->
+                        <button id="open-sidebar" class="md:hidden mr-4 text-gray-600"><i class="fas fa-bars text-2xl"></i></button>
+                        <h2 id="page-title" class="text-lg font-semibold truncate">Dashboard</h2>
+                    </div>
+                    <button class="logout-btn px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md">Sair</button>
+                </header>
+                
+                <main class="flex-grow p-4 md:p-6 overflow-y-auto">
+                    <div id="page-dashboard" class="page-content"></div>
+                    <div id="page-appointments" class="page-content hidden"></div>
+                    <div id="page-services" class="page-content hidden"></div>
+                    <div id="page-plans" class="page-content hidden"></div>
+                    <div id="page-clients" class="page-content hidden"></div>
+                    <div id="page-expenses" class="page-content hidden"></div>
+                    <div id="page-subscription" class="page-content hidden"></div>
+                    <div id="page-settings" class="page-content hidden"></div>
+                </main>
+            </div>
+        </div>
+
+        <!-- VISÃO DO CLIENTE -->
+        <div id="customer-view" class="min-h-screen hidden"></div>
+    </div>
+    
+    <!-- MODAL GENÉRICO -->
+    <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="modal-title" class="text-xl font-bold"></h3>
+                <button id="modal-close-btn" class="text-gray-500 text-2xl">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6"></div>
+        </div>
+    </div>
+    
+    <!-- TOAST MESSAGES -->
+    <div id="message-box" class="fixed top-5 right-5 bg-green-500 text-white py-3 px-5 rounded-lg shadow-lg z-50 opacity-0 transition-opacity duration-300 hidden">
+        <p id="message-text"></p>
+    </div>
+</body>
+</html>
