@@ -118,7 +118,7 @@ export function renderAppointmentsPage(container) {
                 <h2 class="text-2xl font-bold text-gray-800">Agenda de Horários</h2>
                 
                 <div class="flex flex-wrap gap-2 bg-gray-50 p-2 rounded-lg border">
-                    <input type="number" id="filter-day" value="${currentDay}" placeholder="${hojeDia}" min="1" max="31" class="w-16 p-1 border rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    <input type="number" id="filter-day" value="${currentDay}" placeholder="Dia" min="1" max="31" class="w-16 p-1 border rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
                     
                     <select id="filter-month" class="p-1 border rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
                         ${['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => {
