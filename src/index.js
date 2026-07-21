@@ -2,7 +2,7 @@
 // Responsável apenas por inicializar os event listeners.
 // Toda lógica de negócio fica nos módulos correspondentes.
 
-import { handleLogin, handleBarberCode, handleRegister, handleLogout } from './api/auth.js';
+import { handleLogin, handleBarberCode, handleRegister, handleLogout, handleForgotPassword } from './api/auth.js';
 import { handleDelete, handleCancelAppointment, handleDeleteBarberAccount, handleSaveBarberSettings, handleDeleteClientAccount, handleSaveClientSettings, handleFormSubmit, handleUpdateStatus } from './api/actions.js';
 import { barberData } from './api/barberData.js';
 import { navigateTo, renderPage } from './components/router.js';
@@ -41,32 +41,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ----------------------------------------
-    // FORMULÁRIOS DE AUTENTICAÇÃO
-    // ----------------------------------------
+        // FORMULÁRIOS DE AUTENTICAÇÃO
+        // ----------------------------------------
 
-    document.getElementById('admin-login-form').addEventListener('submit', (e) => handleLogin(e, 'barber'));
-    document.getElementById('client-login-form').addEventListener('submit', (e) => handleLogin(e, 'client'));
-    document.getElementById('barber-code-form').addEventListener('submit', handleBarberCode);
-    document.getElementById('register-form').addEventListener('submit', handleRegister);
+        document.getElementById('unified-login-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const userType = document.getElementById('login-user-type').value;
+            handleLogin(e, userType);
+        });
 
-    // Alternar entre tela de login e cadastro
-    document.getElementById('show-register-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('login-form-container').classList.add('hidden');
-        document.getElementById('register-form-container').classList.remove('hidden');
-    });
-    document.getElementById('show-login-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('register-form-container').classList.add('hidden');
-        document.getElementById('login-form-container').classList.remove('hidden');
-    });
 
-    document.addEventListener('input', (e) => {
-        // Verifica se o ID do elemento que disparou o evento é um dos campos de telefone
-        if (e.target.id === 'register-phone' || e.target.id === 'barber-phone') {
-        e.target.value = formatPhoneInput(e.target.value);
-        }
-    });
+        document.addEventListener('input', (e) => {
+            // Verifica se o ID do elemento que disparou o evento é um dos campos de telefone
+            if (e.target.id === 'register-phone' || e.target.id === 'barber-phone') {
+            e.target.value = formatPhoneInput(e.target.value);
+            }
+        });
+
+        document.getElementById('register-form')?.addEventListener('submit', handleRegister);
+        document.getElementById('barber-code-form')?.addEventListener('submit', handleBarberCode);
+
+        document.getElementById('forgot-password-form')?.addEventListener('submit', handleForgotPassword);
+
+        // --- ALTERNÂNCIA DE TELAS (Login / Cadastro / Esqueci Senha) ---
+
+        // Login -> Cadastro
+        document.getElementById('show-register-link')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('login-form-container').classList.add('hidden');
+            document.getElementById('register-form-container').classList.remove('hidden');
+        });
+
+        // Cadastro -> Login
+        document.getElementById('show-login-link')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('register-form-container').classList.add('hidden');
+            document.getElementById('login-form-container').classList.remove('hidden');
+        });
+
+        // Login -> Esqueci Senha
+        document.getElementById('forgot-password-link')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('login-form-container').classList.add('hidden');
+            document.getElementById('forgot-password-container').classList.remove('hidden');
+        });
+
+        // Esqueci Senha -> Login
+        document.getElementById('back-to-login-from-forgot')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('forgot-password-container').classList.add('hidden');
+            document.getElementById('login-form-container').classList.remove('hidden');
+        });
 
     setupPasswordValidation(document.getElementById('register-password'));
 

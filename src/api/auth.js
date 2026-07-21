@@ -11,16 +11,18 @@ export let activeBarber = null;
 // Cliente logado
 export let activeClient = null;
 
-
 const loader = document.getElementById('loadingScreen');
+
 // ----------------------------------------
 // LOGIN
 // ----------------------------------------
 
 export async function handleLogin(e, role) {
     e.preventDefault();
-    const email = document.getElementById(`${role}-email`).value;
-    const password = document.getElementById(`${role}-password`).value;
+    
+    // MODIFICADO: Agora busca os IDs fixos do formulário unificado, independente da role
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
 
     loader.style.display = 'flex';
 
@@ -67,8 +69,16 @@ export async function handleLogin(e, role) {
 
     } catch (error) {
         console.error('[Auth] Erro no login:', error);
-        loginError.textContent = 'Erro ao conectar com o servidor.';
-        loginError.classList.remove('hidden');
+        // Garante que o loader suma em caso de erro crítico de rede
+        loader.style.display = 'none'; 
+        
+        // Dica: Se 'loginError' for um elemento global, ele continuará funcionando aqui
+        if (typeof loginError !== 'undefined') {
+            loginError.textContent = 'Erro ao conectar com o servidor.';
+            loginError.classList.remove('hidden');
+        } else {
+            showMessage('Erro ao conectar com o servidor.', 'error');
+        }
     }
 }
 
@@ -163,13 +173,63 @@ export function handleLogout() {
     activeClient = null;
     disconnectSocket();
 
-    document.querySelectorAll('#admin-login-form input, #client-login-form input').forEach(input => {
-        input.value = '';
-    });
+    // MODIFICADO: Limpa os inputs de e-mail e senha e reseta o select do tipo de usuário
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    const typeSelect = document.getElementById('login-user-type');
 
-    document.getElementById('admin-view').classList.add('hidden');
-    document.getElementById('customer-view').classList.add('hidden');
-    document.getElementById('app-wrapper').classList.add('hidden');
-    document.getElementById('barber-code-screen').classList.add('hidden');
-    document.getElementById('login-screen').classList.remove('hidden');
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+    if (typeSelect) typeSelect.value = ''; // Reseta para a opção "Selecione..."
+
+    // Oculta as telas do sistema e exibe a tela de login unificada
+    document.getElementById('admin-view')?.classList.add('hidden');
+    document.getElementById('customer-view')?.classList.add('hidden');
+    document.getElementById('app-wrapper')?.classList.add('hidden');
+    document.getElementById('barber-code-screen')?.classList.add('hidden');
+    document.getElementById('login-screen')?.classList.remove('hidden');
 }
+
+// ----------------------------------------
+// NOVO: ESQUECI MINHA SENHA
+// ----------------------------------------
+
+export async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgot-email').value;
+
+    // Ativa o loadingScreen importado localmente neste arquivo
+    if (loader) loader.style.display = 'flex';
+
+    try {
+        const response = await fetch(`${API_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const result = await response.json();
+
+        // Desativa o loadingScreen independente da resposta
+        if (loader) loader.style.display = 'none';
+
+        if (response.ok) {
+            // Sucesso total no envio do e-mail real pelo Resend
+            showMessage('E-mail enviado! Verifique sua caixa de entrada.', 'success');
+            
+            // Retorna para o formulário de login e limpa os campos
+            document.getElementById('forgot-password-container').classList.add('hidden');
+            document.getElementById('login-form-container').classList.remove('hidden');
+            document.getElementById('forgot-password-form').reset();
+        } else {
+            // Exibe mensagem caso o e-mail não exista ou ocorra um erro tratado no servidor
+            showMessage(result.error, 'error');
+        }
+
+    } catch (error) {
+        if (loader) loader.style.display = 'none';
+        console.error('[Auth] Erro ao processar esqueci senha:', error);
+        showMessage('Erro ao conectar com o servidor.', 'error');
+    }
+}
+

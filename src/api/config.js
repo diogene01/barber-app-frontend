@@ -5,3 +5,4 @@
 //     : 'https://seu-back-no-render.onrender.com';
 
 export const API_URL = 'https://barberapp-server-smkg.onrender.com';
+// export const API_URL = 'http://localhost:3000';

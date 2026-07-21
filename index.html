@@ -84,14 +84,12 @@
             box-shadow: 0 0 25px rgba(255, 157, 0, 0.3);
         }
 
-        /* O Segredo do Loop está aqui: */
         .barber-pole::before {
             content: "";
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            /* A altura deve ser grande o suficiente para cobrir o movimento */
             height: 200%; 
             background: repeating-linear-gradient(
                 -45deg,
@@ -104,11 +102,9 @@
                 #ffffff 60px,
                 #ffffff 80px
             );
-            /* Animamos exatamente o tamanho de um ciclo do gradiente (80px) */
             animation: moveStripes 5s linear infinite;
         }
 
-        /* Tampas de Metal */
         .pole-cap {
             width: 60px;
             height: 20px;
@@ -121,7 +117,6 @@
         .cap-top { top: -15px; }
         .cap-bottom { bottom: -15px; }
 
-        /* O pulo do gato: o movimento de 80px bate com o fim do gradiente */
         @keyframes moveStripes {
             from { transform: translateY(0px); }
             to { transform: translateY(-100px); } 
@@ -130,7 +125,6 @@
         .loading-text {
             margin-top: 30px;
             color: #ff9d00;
-            /* font-family: 'Impact', 'Arial Black', sans-serif; */
             font-size: 18px;
             letter-spacing: 3px;
             text-align: center;
@@ -142,17 +136,17 @@
             50% { opacity: 0.5; }
         }
     </style>
-
 </head>
 <body class="text-gray-800">
     <div id="loadingScreen">
-    <div style="position: relative;">
-        <div class="pole-cap cap-top"></div>
-        <div class="barber-pole"></div>
-        <div class="pole-cap cap-bottom"></div>
+        <div style="position: relative;">
+            <div class="pole-cap cap-top"></div>
+            <div class="barber-pole"></div>
+            <div class="pole-cap cap-bottom"></div>
+        </div>
+        <div class="loading-text">CARREGANDO INFORMAÇÕES...</div>
     </div>
-    <div class="loading-text">CARREGANDO INFORMAÇÕES...</div>
-    </div>
+
     <div id="login-screen" class="flex items-center justify-center min-h-screen bg-gray-100">
         <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg mx-4">
             <div class="text-center">
@@ -162,31 +156,55 @@
             </div>
             
             <div id="login-form-container">
-                <form id="admin-login-form">
-                    <h3 class="text-lg font-medium text-center text-gray-700 mb-4">Acesso do Barbeiro</h3>
+                <form id="unified-login-form">
                     <div class="space-y-4">
-                        <input type="email" id="barber-email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="E-mail" required>
-                        <div class="password-container">
-                            <input type="password" id="barber-password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="Senha" required>
-                            <i class="fas fa-eye-slash absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-400" data-toggle-password="barber-password"></i>
+                        <div>
+                            <label for="login-user-type" class="block text-sm font-medium text-gray-700 mb-1">Escolha seu tipo de usuário</label>
+                            <select id="login-user-type" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 bg-white" required>
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="client">Cliente</option>
+                                <option value="barber">Barbeiro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <input type="email" id="login-email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="E-mail" required>
+                        </div>
+
+                        <div class="relative">
+                            <input type="password" id="login-password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="Senha" required>
+                            <i class="fas fa-eye-slash absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-400" data-toggle-password="login-password"></i>
                         </div>
                     </div>
+
+                    <div class="text-right mt-2">
+                        <a href="#" id="forgot-password-link" class="text-sm font-medium text-slate-600 hover:underline">Esqueci minha senha</a>
+                    </div>
+
                     <button type="submit" class="w-full px-4 py-2 mt-6 font-semibold text-white bg-[#334155] rounded-md hover:opacity-90">Entrar no Painel</button>
                 </form>
-                <div class="my-4 flex items-center justify-center"><span class="px-2 text-sm text-gray-500 bg-white">OU</span></div>
-                <form id="client-login-form">
-                    <h3 class="text-lg font-medium text-center text-gray-700 mb-4">Acesso do Cliente</h3>
-                    <div class="space-y-4">
-                        <input type="email" id="client-email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="E-mail" required>
-                        <div class="password-container">
-                            <input type="password" id="client-password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="Senha" required>
-                            <i class="fas fa-eye-slash absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-400" data-toggle-password="client-password"></i>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full px-4 py-2 mt-6 font-semibold text-white bg-[#334155] rounded-md hover:opacity-90">Agendar Horário</button>
-                </form>
+
                 <p class="mt-6 text-center text-sm">
                     <a href="#" id="show-register-link" class="font-medium text-slate-700 hover:underline">Não tem uma conta? Cadastre-se</a>
+                </p>
+            </div>
+
+            <div id="forgot-password-container" class="hidden">
+                <form id="forgot-password-form">
+                    <h3 class="text-xl font-bold text-center text-gray-800 mb-2">Recuperar Senha</h3>
+                    <p class="text-sm text-gray-600 text-center mb-6">Digite seu e-mail cadastrado. Enviaremos um link para você redefinir sua senha.</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <input type="email" id="forgot-email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500" placeholder="Digite seu e-mail" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full px-4 py-2 mt-6 font-semibold text-white bg-slate-700 rounded-md hover:opacity-90">Enviar Link de Redefinição</button>
+                </form>
+                
+                <p class="mt-6 text-center text-sm">
+                    <a href="#" id="back-to-login-from-forgot" class="font-medium text-slate-700 hover:underline">Voltar para o Login</a>
                 </p>
             </div>
 
@@ -219,6 +237,7 @@
             </div>
         </div>
     </div>
+
     <div id="barber-code-screen" class="flex items-center justify-center min-h-screen bg-gray-100 hidden">
         <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-lg text-center mx-4">
             <i class="fas fa-cut text-5xl text-slate-700"></i>
@@ -236,7 +255,6 @@
             <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
             <div id="admin-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-30 transform -translate-x-full md:relative md:translate-x-0 flex flex-col">
                 <div class="flex flex-col items-center justify-center pt-6 pb-4 px-6 border-b bg-white relative">
-                    
                     <button id="close-sidebar" class="md:hidden absolute top-4 right-4 text-gray-400">
                         <i class="fas fa-times text-xl"></i>
                     </button>
@@ -259,11 +277,9 @@
                 </nav>
             </div>
 
-            <!-- ÁREA DE CONTEÚDO -->
             <div class="flex flex-col flex-grow w-full overflow-hidden">
                 <header class="flex items-center h-16 px-4 bg-white shadow-sm justify-between flex-shrink-0">
                     <div class="flex items-center">
-                        <!-- BOTÃO HAMBÚRGUER -->
                         <button id="open-sidebar" class="md:hidden mr-4 text-gray-600"><i class="fas fa-bars text-2xl"></i></button>
                         <h2 id="page-title" class="text-lg font-semibold truncate">Dashboard</h2>
                     </div>
@@ -283,11 +299,9 @@
             </div>
         </div>
 
-        <!-- VISÃO DO CLIENTE -->
         <div id="customer-view" class="min-h-screen hidden"></div>
     </div>
     
-    <!-- MODAL GENÉRICO -->
     <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-md">
             <div class="flex justify-between items-center p-4 border-b">
@@ -298,7 +312,6 @@
         </div>
     </div>
     
-    <!-- TOAST MESSAGES -->
     <div id="message-box" class="fixed top-5 right-5 bg-green-500 text-white py-3 px-5 rounded-lg shadow-lg z-50 opacity-0 transition-opacity duration-300 hidden">
         <p id="message-text"></p>
     </div>
