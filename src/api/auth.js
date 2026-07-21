@@ -20,11 +20,10 @@ const loader = document.getElementById('loadingScreen');
 export async function handleLogin(e, role) {
     e.preventDefault();
     
-    // MODIFICADO: Agora busca os IDs fixos do formulário unificado, independente da role
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
 
-    loader.style.display = 'flex';
+    if (loader) loader.style.display = 'flex';
 
     try {
         const response = await fetch(`${API_URL}/login`, {
@@ -32,11 +31,16 @@ export async function handleLogin(e, role) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, userType: role })
         });
-        const result = await response.json();
+
+        const contentType = response.headers.get('content-type');
+        let result = {};
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        }
 
         if (!response.ok) {
-            loader.style.display = 'none';
-            showMessage(result.error, 'error');
+            if (loader) loader.style.display = 'none';
+            showMessage(result.error || `Erro no servidor: Status ${response.status}`, 'error');
             return;
         }
 
@@ -45,40 +49,28 @@ export async function handleLogin(e, role) {
         if (role === 'barber') {
             activeBarber = result.user;
 
-            // if (activeBarber.subscription_status !== 'active') {
-            //     loginError.textContent = 'Sua assinatura está vencida. Regularize para acessar.';
-            //     loginError.classList.remove('hidden');
-            //     return;
-            // }
+            const adminDisplay = document.getElementById('admin-name-display');
+            if (adminDisplay) adminDisplay.textContent = activeBarber.name;
 
-            document.getElementById('admin-name-display').textContent = activeBarber.name;
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-wrapper').classList.remove('hidden');
-            document.getElementById('admin-view').classList.remove('hidden');
-            document.getElementById('customer-view').classList.add('hidden');
+            document.getElementById('login-screen')?.classList.add('hidden');
+            document.getElementById('app-wrapper')?.classList.remove('hidden');
+            document.getElementById('admin-view')?.classList.remove('hidden');
+            document.getElementById('customer-view')?.classList.add('hidden');
 
             await fetchAllBarberData(activeBarber);
             navigateTo('page-dashboard');
 
         } else {
             activeClient = result.user;
-            loader.style.display = 'none';
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('barber-code-screen').classList.remove('hidden');
+            if (loader) loader.style.display = 'none';
+            document.getElementById('login-screen')?.classList.add('hidden');
+            document.getElementById('barber-code-screen')?.classList.remove('hidden');
         }
 
     } catch (error) {
         console.error('[Auth] Erro no login:', error);
-        // Garante que o loader suma em caso de erro crítico de rede
-        loader.style.display = 'none'; 
-        
-        // Dica: Se 'loginError' for um elemento global, ele continuará funcionando aqui
-        if (typeof loginError !== 'undefined') {
-            loginError.textContent = 'Erro ao conectar com o servidor.';
-            loginError.classList.remove('hidden');
-        } else {
-            showMessage('Erro ao conectar com o servidor.', 'error');
-        }
+        if (loader) loader.style.display = 'none'; 
+        showMessage('Erro ao conectar com o servidor.', 'error');
     }
 }
 
@@ -90,38 +82,54 @@ export async function handleBarberCode(e) {
     e.preventDefault();
     const code = document.getElementById('barber-code-input').value;
     const barberCodeError = document.getElementById('barber-code-error');
-    barberCodeError.classList.add('hidden');
+    if (barberCodeError) barberCodeError.classList.add('hidden');
 
     try {
-        loader.style.display = 'flex';
+        if (loader) loader.style.display = 'flex';
 
         const response = await fetch(`${API_URL}/barbers?code=${code}`);
-        const result = await response.json();
+        
+        const contentType = response.headers.get('content-type');
+        let result = [];
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        }
 
-        if (!response.ok || result.length === 0) {
-            barberCodeError.textContent = result.error || 'Código inválido.';
-            barberCodeError.classList.remove('hidden');
-            loader.style.display = 'none';
+        if (!response.ok || !Array.isArray(result) || result.length === 0) {
+            const errorMsg = result.error || 'Código inválido.';
+            if (barberCodeError) {
+                barberCodeError.textContent = errorMsg;
+                barberCodeError.classList.remove('hidden');
+            } else {
+                showMessage(errorMsg, 'error');
+            }
+            if (loader) loader.style.display = 'none';
             return;
         }
 
         activeBarber = result[0];
-        document.getElementById('barber-code-screen').classList.add('hidden');
-        document.getElementById('app-wrapper').classList.remove('hidden');
-        document.getElementById('customer-view').classList.remove('hidden');
-        document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('barber-code-screen')?.classList.add('hidden');
+        document.getElementById('app-wrapper')?.classList.remove('hidden');
+        document.getElementById('customer-view')?.classList.remove('hidden');
+        document.getElementById('admin-view')?.classList.add('hidden');
 
         await fetchAllBarberData(activeBarber);
         renderCustomerView();
-        loader.style.display = 'none';
+        if (loader) loader.style.display = 'none';
 
     } catch (error) {
         console.error('[Auth] Erro ao verificar código:', error);
-        barberCodeError.textContent = 'Erro ao conectar com o servidor.';
-        barberCodeError.classList.remove('hidden');
+        if (loader) loader.style.display = 'none';
+        if (barberCodeError) {
+            barberCodeError.textContent = 'Erro ao conectar com o servidor.';
+            barberCodeError.classList.remove('hidden');
+        } else {
+            showMessage('Erro ao conectar com o servidor.', 'error');
+        }
     }
 
-    document.getElementById('barber-code-input').value = '';
+    const codeInput = document.getElementById('barber-code-input');
+    if (codeInput) codeInput.value = '';
 }
 
 // ----------------------------------------
@@ -143,23 +151,33 @@ export async function handleRegister(e) {
     }
 
     try {
+        if (loader) loader.style.display = 'flex';
+
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, phone, password, userType })
         });
-        const result = await response.json();
+        
+        const contentType = response.headers.get('content-type');
+        let result = {};
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        }
+
+        if (loader) loader.style.display = 'none';
 
         if (response.ok) {
-            showMessage(result.message, 'success');
-            document.getElementById('login-form-container').classList.remove('hidden');
-            document.getElementById('register-form-container').classList.add('hidden');
-            document.getElementById('register-form').reset();
+            showMessage(result.message || 'Cadastro realizado com sucesso!', 'success');
+            document.getElementById('login-form-container')?.classList.remove('hidden');
+            document.getElementById('register-form-container')?.classList.add('hidden');
+            document.getElementById('register-form')?.reset();
         } else {
-            showMessage(result.error, 'error');
+            showMessage(result.error || 'Erro ao realizar cadastro.', 'error');
         }
     } catch (error) {
         console.error('[Auth] Erro no cadastro:', error);
+        if (loader) loader.style.display = 'none';
         showMessage('Erro ao conectar com o servidor.', 'error');
     }
 }
@@ -173,16 +191,14 @@ export function handleLogout() {
     activeClient = null;
     disconnectSocket();
 
-    // MODIFICADO: Limpa os inputs de e-mail e senha e reseta o select do tipo de usuário
     const emailInput = document.getElementById('login-email');
     const passwordInput = document.getElementById('login-password');
     const typeSelect = document.getElementById('login-user-type');
 
     if (emailInput) emailInput.value = '';
     if (passwordInput) passwordInput.value = '';
-    if (typeSelect) typeSelect.value = ''; // Reseta para a opção "Selecione..."
+    if (typeSelect) typeSelect.value = '';
 
-    // Oculta as telas do sistema e exibe a tela de login unificada
     document.getElementById('admin-view')?.classList.add('hidden');
     document.getElementById('customer-view')?.classList.add('hidden');
     document.getElementById('app-wrapper')?.classList.add('hidden');
@@ -191,14 +207,13 @@ export function handleLogout() {
 }
 
 // ----------------------------------------
-// NOVO: ESQUECI MINHA SENHA
+// ESQUECI MINHA SENHA
 // ----------------------------------------
 
 export async function handleForgotPassword(e) {
     e.preventDefault();
     const email = document.getElementById('forgot-email').value;
 
-    // Ativa o loadingScreen importado localmente neste arquivo
     if (loader) loader.style.display = 'flex';
 
     try {
@@ -208,22 +223,23 @@ export async function handleForgotPassword(e) {
             body: JSON.stringify({ email })
         });
 
-        const result = await response.json();
+        // Garante leitura de JSON segura caso a resposta não venha no formato correto
+        const contentType = response.headers.get('content-type');
+        let result = {};
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        }
 
-        // Desativa o loadingScreen independente da resposta
         if (loader) loader.style.display = 'none';
 
         if (response.ok) {
-            // Sucesso total no envio do e-mail real pelo Resend
             showMessage('E-mail enviado! Verifique sua caixa de entrada.', 'success');
             
-            // Retorna para o formulário de login e limpa os campos
-            document.getElementById('forgot-password-container').classList.add('hidden');
-            document.getElementById('login-form-container').classList.remove('hidden');
-            document.getElementById('forgot-password-form').reset();
+            document.getElementById('forgot-password-container')?.classList.add('hidden');
+            document.getElementById('login-form-container')?.classList.remove('hidden');
+            document.getElementById('forgot-password-form')?.reset();
         } else {
-            // Exibe mensagem caso o e-mail não exista ou ocorra um erro tratado no servidor
-            showMessage(result.error, 'error');
+            showMessage(result.error || 'Não foi possível enviar o e-mail de recuperação.', 'error');
         }
 
     } catch (error) {
@@ -232,4 +248,3 @@ export async function handleForgotPassword(e) {
         showMessage('Erro ao conectar com o servidor.', 'error');
     }
 }
-
